@@ -60,6 +60,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     public Product findByName(String name);
 
+    public Product findByid(Long id);
+
     public Optional<Product> findById(Long id);
 
 //    - **findByNameLike**:

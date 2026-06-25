@@ -53,9 +53,11 @@ public class OrderDetails {
 //    - This field represents the list of items in the order.
 //    - Use @OneToMany(mappedBy = "order", fetch = FetchType.EAGER) to establish the one-to-many relationship with OrderItem.
 //    - Apply @JsonManagedReference to prevent circular references during JSON serialization.
-    @JsonManagedReference
-    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
-    private List<OrderItem> orderItems;
+
+
+//    @JsonManagedReference
+//    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
+//    private List<OrderItem> orderItems;
 
 // 7. Add constructors:
 //    - A no-argument constructor.
@@ -116,11 +118,13 @@ public class OrderDetails {
         this.totalPrice = totalPrice;
     }
 
-    public List<OrderItem> getOrderItems() {
-        return orderItems;
-    }
+//    public List<OrderItem> getOrderItems() {
+//        return orderItems;
+//    }
+//
+//    public void setOrderItems(List<OrderItem> orderItems) {
+//        this.orderItems = orderItems;
+//    }
 
-    public void setOrderItems(List<OrderItem> orderItems) {
-        this.orderItems = orderItems;
-    }
+
 }
