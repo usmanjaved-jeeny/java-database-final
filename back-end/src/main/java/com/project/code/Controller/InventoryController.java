@@ -82,7 +82,7 @@ public class InventoryController {
         return response;
     }
 
-    @GetMapping("filter/{category}/{name}/{storeid}")
+    @GetMapping("/filter/{category}/{name}/{storeId}")
     public Map<String, Object> getProductName(
             @PathVariable String category,
             @PathVariable String name,
@@ -126,7 +126,7 @@ public class InventoryController {
         return response;
     }
 
-    @GetMapping("validate/{quantity}/{storeId}/{productId}")
+    @GetMapping("/validate/{quantity}/{storeId}/{productId} ")
     public boolean validateQuantity(
             @PathVariable Integer quantity,
             @PathVariable Long storeId,
