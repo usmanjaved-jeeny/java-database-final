@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 public class OrderDetails {
@@ -43,10 +42,11 @@ public class OrderDetails {
 //    - This field represents the total price of the order.
     private Double totalPrice;
 
-// 5. Add 'date' field:
-//    - Type: private LocalDateTime
-//    - This field represents the date and time when the order was placed.
-    private LocalDateTime date;
+    /**
+     * The date and time when the order was placed.
+     */
+    @Column(name = "date")
+    private LocalDateTime orderDate;
 
 // 6. Add 'orderItems' field:
 //    - Type: private List<OrderItem>
@@ -63,11 +63,14 @@ public class OrderDetails {
 //    - A no-argument constructor.
 //    - A parameterized constructor that accepts Customer, Store, totalPrice, and date as parameters.
 
-    public OrderDetails(Customer customer, Store store, Double totalPrice, LocalDateTime date) {
+    public OrderDetails() {
+    }
+
+    public OrderDetails(Customer customer, Store store, Double totalPrice, LocalDateTime orderDate) {
         this.customer = customer;
         this.store = store;
         this.totalPrice = totalPrice;
-        this.date = date;
+        this.orderDate = orderDate;
     }
 
 
@@ -102,12 +105,12 @@ public class OrderDetails {
         this.store = store;
     }
 
-    public LocalDateTime getDate() {
-        return date;
+    public LocalDateTime getOrderDate() {
+        return orderDate;
     }
 
-    public void setDate(LocalDateTime date) {
-        this.date = date;
+    public void setOrderDate(LocalDateTime orderDate) {
+        this.orderDate = orderDate;
     }
 
     public Double getTotalPrice() {

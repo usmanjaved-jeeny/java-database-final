@@ -8,8 +8,11 @@ import com.project.code.Repo.ProductRepository;
 import com.project.code.Service.ServiceClass;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,23 +86,36 @@ public class InventoryController {
     }
 
     @GetMapping("/filter/{category}/{name}/{storeId}")
-    public Map<String, Object> getProductName(
+    public ResponseEntity<Map<String, Object>> getProductName(
             @PathVariable String category,
             @PathVariable String name,
-            @PathVariable Long storeid) {
+            @PathVariable Long storeId) {
         Map<String, Object> response = new HashMap<>();
+
+        if (storeId == null || storeId <= 0) {
+            response.put("message", "Invalid store ID");
+            response.put("product", Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (category == null || name == null) {
+            response.put("message", "Category and name parameters are required");
+            response.put("product", Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
         List<Product> products;
 
         if (category.equals("null")) {
-            products = productRepository.findByNameLike(storeid, name);
+            products = productRepository.findByNameLike(storeId, name);
         } else if (name.equals("null")) {
-            products = productRepository.findByCategoryAndStoreId(storeid, category);
+            products = productRepository.findByCategoryAndStoreId(storeId, category);
         } else {
-            products = productRepository.findByNameAndCategory(storeid, name, category);
+            products = productRepository.findByNameAndCategory(storeId, name, category);
         }
 
         response.put("product", products);
-        return response;
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("search/{name}/{storeId}")
@@ -126,15 +142,33 @@ public class InventoryController {
         return response;
     }
 
-    @GetMapping("/validate/{quantity}/{storeId}/{productId} ")
-    public boolean validateQuantity(
+    @GetMapping("/validate/{quantity}/{storeId}/{productId}")
+    public ResponseEntity<Map<String, Object>> validateQuantity(
             @PathVariable Integer quantity,
             @PathVariable Long storeId,
             @PathVariable Long productId) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (quantity == null || quantity <= 0 || storeId == null || storeId <= 0 || productId == null || productId <= 0) {
+            response.put("valid", false);
+            response.put("message", "Invalid input parameters");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
         Inventory inventory = inventoryRepository.findByProductIdandStoreId(productId, storeId);
         if (inventory == null) {
-            return false;
+            response.put("valid", false);
+            response.put("message", "Inventory not found for the given product and store");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
-        return inventory.getStockLevel() >= quantity;
+
+        boolean sufficientStock = inventory.getStockLevel() >= quantity;
+        response.put("valid", sufficientStock);
+        response.put("message", sufficientStock
+                ? "Sufficient stock available"
+                : "Insufficient stock available");
+        response.put("availableQuantity", inventory.getStockLevel());
+
+        return ResponseEntity.ok(response);
     }
 }

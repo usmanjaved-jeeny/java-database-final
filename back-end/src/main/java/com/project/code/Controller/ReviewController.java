@@ -27,10 +27,13 @@ public class ReviewController {
             @PathVariable Long storeId,
             @PathVariable Long productId) {
         Map<String, Object> response = new HashMap<>();
-        List<Review> reviews = reviewRepository.findByStoreIdAndProductId(storeId, productId);
-
         List<Map<String, Object>> filteredReviews = new ArrayList<>();
-        for (Review review : reviews) {
+
+        for (Review review : reviewRepository.findAll()) {
+            if (!storeId.equals(review.getStoreId()) || !productId.equals(review.getProductId())) {
+                continue;
+            }
+
             Map<String, Object> reviewData = new HashMap<>();
             reviewData.put("comment", review.getComment());
             reviewData.put("rating", review.getRating());

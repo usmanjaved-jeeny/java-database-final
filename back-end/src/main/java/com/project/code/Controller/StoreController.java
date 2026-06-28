@@ -5,6 +5,8 @@ import com.project.code.Model.Store;
 import com.project.code.Repo.StoreRepository;
 import com.project.code.Service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -28,9 +30,13 @@ public class StoreController {
         return response;
     }
 
-    @GetMapping("validate/store/{id}")
-    public boolean validateStore(@PathVariable Long storeId) {
-        return storeRepository.findByid(storeId) != null;
+    @GetMapping("validate/{storeId}")
+    public ResponseEntity<Boolean> validateStore(@PathVariable Long storeId) {
+        boolean exists = storeRepository.findByid(storeId) != null;
+        if (exists) {
+            return ResponseEntity.ok(true);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
     }
 
     @PostMapping("/placeOrder")
@@ -45,6 +51,5 @@ public class StoreController {
         }
 
         return response;
-
     }
 }

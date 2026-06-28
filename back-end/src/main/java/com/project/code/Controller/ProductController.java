@@ -6,6 +6,9 @@ import com.project.code.Repo.ProductRepository;
 import com.project.code.Service.ServiceClass;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -44,11 +47,19 @@ public class ProductController {
         return response;
     }
 
-    @GetMapping("/product/{id}")
-    public Map<String, Object> getProductbyId(@PathVariable Long id) {
+    @GetMapping({"/{id}", "/product/{id}"})
+    public ResponseEntity<Map<String, Object>> getProductbyId(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
-        productRepository.findById(id).ifPresent(product -> response.put("products", product));
-        return response;
+
+        return productRepository.findById(id)
+                .map(product -> {
+                    response.put("products", product);
+                    return ResponseEntity.ok(response);
+                })
+                .orElseGet(() -> {
+                    response.put("message", "Product not found with id: " + id);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                });
     }
 
     @PutMapping
@@ -102,17 +113,23 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     public Map<String, String> deleteProduct(@PathVariable Long id) {
         Map<String, String> response = new HashMap<>();
 
-        if (!serviceClass.ValidateProductId(id)) {
-            response.put("message", "Product not present in database");
-            return response;
+        try {
+            if (!serviceClass.ValidateProductId(id)) {
+                response.put("message", "Product not present in database");
+                return response;
+            }
+
+            inventoryRepository.deleteByProductId(id);
+            productRepository.deleteById(id);
+            response.put("message", "Product deleted successfully");
+        } catch (Exception e) {
+            response.put("message", "Error deleting product: " + e.getMessage());
         }
 
-        inventoryRepository.deleteByProductId(id);
-        productRepository.deleteById(id);
-        response.put("message", "Product deleted successfully");
         return response;
     }
 
