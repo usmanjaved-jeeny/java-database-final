@@ -30,7 +30,7 @@ public class StoreController {
         return response;
     }
 
-    @GetMapping("validate/{storeId}")
+    @GetMapping("validate/store/{id}")
     public ResponseEntity<Boolean> validateStore(@PathVariable Long storeId) {
         boolean exists = storeRepository.findByid(storeId) != null;
         if (exists) {

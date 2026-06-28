@@ -47,7 +47,7 @@ public class ProductController {
         return response;
     }
 
-    @GetMapping({"/{id}", "/product/{id}"})
+    @GetMapping({"/product/{id}"})
     public ResponseEntity<Map<String, Object>> getProductbyId(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
 
@@ -113,7 +113,6 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    @Transactional
     public Map<String, String> deleteProduct(@PathVariable Long id) {
         Map<String, String> response = new HashMap<>();
 

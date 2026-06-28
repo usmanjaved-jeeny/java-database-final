@@ -1,13 +1,23 @@
 package com.project.code.Service;
 
+import com.project.code.Model.Customer;
+import com.project.code.Model.Inventory;
+import com.project.code.Model.OrderDetails;
+import com.project.code.Model.OrderItem;
+import com.project.code.Model.PlaceOrderRequestDTO;
+import com.project.code.Model.PurchaseProductDTO;
+import com.project.code.Model.Store;
+import com.project.code.Repo.CustomerRepository;
+import com.project.code.Repo.InventoryRepository;
+import com.project.code.Repo.OrderDetailsRepository;
+import com.project.code.Repo.OrderItemRepository;
+import com.project.code.Repo.ProductRepository;
+import com.project.code.Repo.StoreRepository;
 
-import com.project.code.Model.*;
-import com.project.code.Repo.*;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class OrderService {
@@ -30,46 +40,50 @@ public class OrderService {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
-    @Transactional
     public void saveOrder(PlaceOrderRequestDTO placeOrderRequest) {
-        Customer customer = customerRepository.findByEmail(placeOrderRequest.getCustomerEmail());
-        if (customer == null) {
-            customer = new Customer();
-            customer.setName(placeOrderRequest.getCustomerName());
-            customer.setEmail(placeOrderRequest.getCustomerEmail());
-            customer.setPhone(placeOrderRequest.getCustomerPhone());
+        // 1. Retrieve or create the Customer
+        Customer existingCustomer = customerRepository.findByEmail(placeOrderRequest.getCustomerEmail());
+        Customer customer = new Customer();
+        customer.setName(placeOrderRequest.getCustomerName());
+        customer.setEmail(placeOrderRequest.getCustomerEmail());
+        customer.setPhone(placeOrderRequest.getCustomerPhone());
+
+        if (existingCustomer == null) {
             customer = customerRepository.save(customer);
+        } else {
+            customer = existingCustomer;
         }
 
-        Store store = storeRepository.findById(placeOrderRequest.getStoreId())
-                .orElseThrow(() -> new RuntimeException("Store not found"));
+// 2. Retrieve the Store
+        Store store = storeRepository.findById(placeOrderRequest.getStoreId()).orElseThrow(() -> new RuntimeException("Store not found"));
 
-        OrderDetails orderDetails = new OrderDetails(
-                customer,
-                store,
-                placeOrderRequest.getTotalPrice(),
-                LocalDateTime.now()
-        );
+// 3. Create OrderDetails
+        OrderDetails orderDetails = new OrderDetails();
+        orderDetails.setCustomer(customer);
+        orderDetails.setStore(store);
+        orderDetails.setTotalPrice(placeOrderRequest.getTotalPrice());
+        orderDetails.setDate(java.time.LocalDateTime.now()); // Use current datetime
+
         orderDetails = orderDetailsRepository.save(orderDetails);
 
-        for (PurchaseProductDTO purchaseProduct : placeOrderRequest.getPurchaseProduct()) {
-            Inventory inventory = inventoryRepository.findByProductIdandStoreId(
-                    purchaseProduct.getId(),
-                    placeOrderRequest.getStoreId()
-            );
-            inventory.setStockLevel(inventory.getStockLevel() - purchaseProduct.getQuantity());
+// 4. Create and save OrderItems (products purchased)
+        List<PurchaseProductDTO> purchaseProducts = placeOrderRequest.getPurchaseProduct();
+        for (PurchaseProductDTO purchaseProductDTO : purchaseProducts) {
+            OrderItem orderItem = new OrderItem();
+
+            Inventory inventory = inventoryRepository.findByProductIdandStoreId(purchaseProductDTO.getId(), placeOrderRequest.getStoreId());
+
+            inventory.setStockLevel(inventory.getStockLevel() - purchaseProductDTO.getQuantity());
             inventoryRepository.save(inventory);
 
-            Product product = productRepository.findById(purchaseProduct.getId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+            orderItem.setOrder(orderDetails); // Link the order to the order item
 
-            OrderItem orderItem = new OrderItem(
-                    orderDetails,
-                    product,
-                    purchaseProduct.getQuantity(),
-                    purchaseProduct.getPrice()
-            );
-            orderItemRepository.save(orderItem);
+            orderItem.setProduct(productRepository.findByid(purchaseProductDTO.getId()));
+
+            orderItem.setQuantity(purchaseProductDTO.getQuantity());
+            orderItem.setPrice(purchaseProductDTO.getPrice() * purchaseProductDTO.getQuantity());
+
+            orderItemRepository.save(orderItem); // Save OrderItem
         }
     }
 }

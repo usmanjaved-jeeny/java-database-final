@@ -1,43 +1,51 @@
 package com.project.code.Service;
 
+import org.springframework.stereotype.Service;
+
 import com.project.code.Model.Inventory;
 import com.project.code.Model.Product;
 import com.project.code.Repo.InventoryRepository;
 import com.project.code.Repo.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @Service
 public class ServiceClass {
 
-    @Autowired
-    private InventoryRepository inventoryRepository;
+    private final InventoryRepository inventoryRepository;
+    private final ProductRepository productRepository;
 
-    @Autowired
-    private ProductRepository productRepository;
+    public ServiceClass(InventoryRepository inventoryRepository, ProductRepository productRepository) {
+        this.inventoryRepository = inventoryRepository;
+        this.productRepository = productRepository;
+    }
 
     public boolean validateInventory(Inventory inventory) {
-        Inventory existing = inventoryRepository.findByProductIdandStoreId(
-                inventory.getProduct().getId(),
-                inventory.getStore().getId()
-        );
-        return existing == null;
+        Inventory result = inventoryRepository.findByProductIdandStoreId(inventory.getProduct().getId(), inventory.getStore().getId());
+        if (result != null) {
+            return false;
+        }
+        return true;
     }
 
     public boolean validateProduct(Product product) {
-        Product existing = productRepository.findByName(product.getName());
-        return existing == null;
+        Product result = productRepository.findByName(product.getName());
+        if (result != null) {
+            return false;
+        }
+        return true;
     }
 
     public boolean ValidateProductId(long id) {
-        Product product = productRepository.findByid(id);
-        return product != null;
+        Product result = productRepository.findByid(id);
+        System.out.println(result);
+        if (result == null) {
+            return false;
+        }
+        return true;
     }
 
     public Inventory getInventoryId(Inventory inventory) {
-        return inventoryRepository.findByProductIdandStoreId(
-                inventory.getProduct().getId(),
-                inventory.getStore().getId()
-        );
+        Inventory result = inventoryRepository.findByProductIdandStoreId(inventory.getProduct().getId(), inventory.getStore().getId());
+
+        return result;
     }
 }
